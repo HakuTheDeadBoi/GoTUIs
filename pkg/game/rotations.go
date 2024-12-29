@@ -1,289 +1,68 @@
 package game
 
-const RotationsCount int = 4
-const ShapePoints int = 4
-const ShapeCount int = 7
-
-type Point struct {
-	Row    int
-	Column int
+// position of top left corner of the tetromino
+// row, col
+var defaultPositions [7][2]int = [7][2]int{
+	{-1, 3},
+	{-1, 3},
+	{-1, 3},
+	{-1, 3},
+	{-1, 3},
+	{-1, 4},
+	{-2, 3},
 }
 
-type Shape struct {
-	DefaultPosition Point
-	RotationsTable  [RotationsCount][ShapePoints]Point
-}
-
-var JShape = Shape{
-	DefaultPosition: Point{Row: -1, Column: 3},
-	RotationsTable: [RotationsCount][ShapePoints]Point{
-		// rotation 0
-		{
-			// four points
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 2},
-		},
-		// rotation 1
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-		},
-		// rotation 2
-		{
-			// four points
-			Point{Row: 0, Column: 0},
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-		},
-		// rotation 3
-		{
-			Point{Row: 0, Column: 1},
-			Point{Row: 0, Column: 2},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-		},
+// J L S Z T O I
+// r1 c1 r2 c2 r3 c3 r4 c4
+var rotations [7][4][8]int = [7][4][8]int{
+	{ // J shape
+		{1, 0, 1, 1, 1, 2, 2, 2},
+		{0, 1, 1, 1, 2, 0, 2, 1},
+		{0, 0, 1, 0, 1, 1, 1, 2},
+		{0, 1, 0, 2, 1, 1, 2, 1},
+	},
+	{ // L shape
+		{1, 0, 1, 1, 1, 2, 2, 0},
+		{0, 0, 0, 1, 1, 1, 2, 1},
+		{1, 0, 1, 1, 1, 2, 0, 2},
+		{0, 1, 1, 2, 2, 1, 2, 2},
+	},
+	{ // S shape
+		{2, 0, 2, 1, 1, 1, 1, 2},
+		{0, 0, 1, 0, 1, 1, 1, 2},
+		{2, 0, 2, 1, 1, 1, 1, 2},
+		{0, 0, 1, 0, 1, 1, 1, 2},
+	},
+	{ // Z shape
+		{1, 0, 1, 1, 2, 1, 2, 2},
+		{0, 1, 1, 0, 1, 1, 2, 0},
+		{1, 0, 1, 1, 2, 1, 2, 2},
+		{0, 1, 1, 0, 1, 1, 2, 0},
+	},
+	{ // T shape
+		{1, 0, 1, 1, 1, 2, 2, 1},
+		{0, 1, 1, 0, 1, 1, 2, 1},
+		{0, 1, 1, 0, 1, 1, 1, 2},
+		{0, 1, 1, 1, 1, 2, 2, 1},
+	},
+	{ // O shape
+		{1, 1, 1, 2, 2, 1, 2, 2},
+		{1, 1, 1, 2, 2, 1, 2, 2},
+		{1, 1, 1, 2, 2, 1, 2, 2},
+		{1, 1, 1, 2, 2, 1, 2, 2},
+	},
+	{
+		{2, 0, 2, 1, 2, 2, 2, 3},
+		{0, 1, 1, 1, 2, 1, 3, 1},
+		{2, 0, 2, 1, 2, 2, 2, 3},
+		{0, 1, 1, 1, 2, 1, 3, 1},
 	},
 }
 
-var LShape = Shape{
-	DefaultPosition: Point{Row: -1, Column: 3},
-	RotationsTable: [RotationsCount][ShapePoints]Point{
-		// rotation 0
-		{
-			// four points
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 0},
-		},
-		// rotation 1
-		{
-			// four points
-			Point{Row: 0, Column: 0},
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-		},
-		// rotation 2
-		{
-			// four points
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 0, Column: 2},
-		},
-		// rotation 3
-		{
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-		},
-	},
+func GetRotationBlocks(shape int, rotation int) *[8]int {
+	return &rotations[shape][rotation]
 }
 
-var SShape = Shape{
-	DefaultPosition: Point{Row: -1, Column: 3},
-	RotationsTable: [RotationsCount][ShapePoints]Point{
-		// rotation 0
-		{
-			// four points
-			Point{Row: 2, Column: 0},
-			Point{Row: 2, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-		},
-		// rotation 1
-		{
-			// four points
-			Point{Row: 0, Column: 0},
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-		},
-		// rotation 2 - eq to 0
-		{
-			// four points
-			Point{Row: 2, Column: 0},
-			Point{Row: 2, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-		},
-		// rotation 3 - eq to 1
-		{
-			// four points
-			Point{Row: 0, Column: 0},
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-		},
-	},
-}
-
-var ZShape = Shape{
-	DefaultPosition: Point{Row: -1, Column: 3},
-	RotationsTable: [RotationsCount][ShapePoints]Point{
-		// rotation 0
-		{
-			// four points
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-		},
-		// rotation 1
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 0},
-		},
-		// rotation 2 - eq to 0
-		{
-			// four points
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-		},
-		// rotation 3 - eq to 1
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 0},
-		},
-	},
-}
-
-var TShape = Shape{
-	DefaultPosition: Point{Row: -1, Column: 3},
-	RotationsTable: [RotationsCount][ShapePoints]Point{
-		// rotation 0
-		{
-			// four points
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 1},
-		},
-		// rotation 1
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-		},
-		// rotation 2
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 0},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-		},
-		// rotation 3
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 1},
-		},
-	},
-}
-
-var OShape = Shape{
-	DefaultPosition: Point{Row: -1, Column: 4},
-	RotationsTable: [RotationsCount][ShapePoints]Point{
-		// rotation 0
-		{
-			// four points
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-		},
-		// rotation 1 - eq to 0
-		{
-			// four points
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-		},
-		// rotation 2 - eq to 0
-		{
-			// four points
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-		},
-		// rotation 3 - eq to 0
-		{
-			// four points
-			Point{Row: 1, Column: 1},
-			Point{Row: 1, Column: 2},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-		},
-	},
-}
-
-var IShape = Shape{
-	DefaultPosition: Point{Row: -2, Column: 3},
-	RotationsTable: [RotationsCount][ShapePoints]Point{
-		// rotation 0
-		{
-			// four points
-			Point{Row: 2, Column: 0},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-			Point{Row: 2, Column: 3},
-		},
-		// rotation 1
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-			Point{Row: 3, Column: 1},
-		},
-		// rotation 2 - eq to 0
-		{
-			// four points
-			Point{Row: 2, Column: 0},
-			Point{Row: 2, Column: 1},
-			Point{Row: 2, Column: 2},
-			Point{Row: 2, Column: 3},
-		},
-		// rotation 3 - eq to 1
-		{
-			// four points
-			Point{Row: 0, Column: 1},
-			Point{Row: 1, Column: 1},
-			Point{Row: 2, Column: 1},
-			Point{Row: 3, Column: 1},
-		},
-	},
-}
-
-var ROTATIONS = [ShapeCount]*Shape{
-	&JShape,
-	&LShape,
-	&SShape,
-	&ZShape,
-	&IShape,
-	&OShape,
-	&TShape,
+func GetDefaultPosition(shape int) *[2]int {
+	return &defaultPositions[shape]
 }
